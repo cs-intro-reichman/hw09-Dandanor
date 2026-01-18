@@ -92,7 +92,7 @@ public class LanguageModel {
         ListIterator it = probs.listIterator(0);
         while (it.hasNext()){
             chd = it.next();
-            if (chd.cp>=rnd){
+            if (chd.cp>rnd){
                 return chd.chr;
             }
         }
@@ -112,7 +112,7 @@ public class LanguageModel {
         }
         StringBuilder str = new StringBuilder(initialText);
         String window = initialText.substring(initialText.length() - windowLength);
-        while(str.length()<textLength)
+        while(str.length()<textLength+initialText.length())
         {
             if(!CharDataMap.containsKey(window)){
                 return str.toString();
