@@ -87,7 +87,7 @@ public class LanguageModel {
         if(probs.getSize()==0){
             throw new IllegalArgumentException("List is empty");
         }
-		double rnd = Math.random();
+		double rnd = randomGenerator.nextDouble();
         CharData chd=null;
         ListIterator it = probs.listIterator(0);
         while (it.hasNext()){
@@ -107,8 +107,23 @@ public class LanguageModel {
 	 * @return the generated text
 	 */
 	public String generate(String initialText, int textLength) {
-		// Your code goes here
-        return "";
+        if(initialText.length()<windowLength){
+            return initialText;
+        }
+        StringBuilder str = new StringBuilder(initialText);
+        String window = initialText.substring(initialText.length() - windowLength);
+        while(str.length()<textLength)
+        {
+            if(!CharDataMap.containsKey(window)){
+                return str.toString();
+            }
+            List probs = CharDataMap.get(window);
+            char newchar = getRandomChar(probs);
+            str.append(newchar);
+            window+=newchar;
+            window=window.substring(1);
+        }
+        return str.toString();
 	}
 
     /** Returns a string representing the map of this language model. */
@@ -122,17 +137,20 @@ public class LanguageModel {
 	}
 
     public static void main(String[] args) {
-		List L = new List();
-        L.addFirst('a');
-        L.addFirst('b');
-        L.addFirst('c');
-        L.update('a');
-        LanguageModel Lan = new LanguageModel(3);
-        Lan.calculateProbabilities(L);
-        
-        Lan.train("originofspecies.txt");
-        for(String key : Lan.CharDataMap.keySet()){
-            System.out.println("window: " +key+ " value :"+ Lan.CharDataMap.get(key));
+        int windowLength=Integer.parseInt(args[0]);
+        String initialText=args[1];
+        int textLength=Integer.parseInt(args[2]);
+        boolean rnd = args[3].equals("random");
+        String fileName=args[4];
+        LanguageModel Lan;
+        if(rnd)
+        {
+            Lan = new LanguageModel(windowLength);
         }
+        else{
+            Lan = new LanguageModel(windowLength,20);
+        }
+        Lan.train(fileName);
+        System.out.println(Lan.generate(initialText, textLength));
     }
 }
