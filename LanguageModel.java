@@ -33,19 +33,70 @@ public class LanguageModel {
 
     /** Builds a language model from the text in the given file (the corpus). */
 	public void train(String fileName) {
-		// Your code goes here
-	}
+        String window = "";
+        char c;
+        In in = new In(fileName);
+        for(int i=0;i<windowLength;i++){ // Reads just enough characters to form the first window
+            if(!in.isEmpty()){
+                window+=in.readChar();
+            }
+        }
+
+        while (!in.isEmpty()){
+            c = in.readChar();
+            List probs = CharDataMap.get(window);
+            if(probs==null){
+                probs = new List();
+                CharDataMap.put(window,probs);
+            }
+            probs.update(c);
+            window+=c;
+            window=window.substring(1);
+        }
+        
+        for(List probs : CharDataMap.values()){
+            calculateProbabilities(probs);
+        }
+    }
 
     // Computes and sets the probabilities (p and cp fields) of all the
 	// characters in the given list. */
-	void calculateProbabilities(List probs) {				
-		// Your code goes here
+	void calculateProbabilities(List probs) {
+        double amount=charAmount(probs); 
+        double comp = 0;
+        ListIterator it = probs.listIterator(0);
+        while (it.hasNext()){
+            CharData chd = it.next();
+            chd.p = (double)chd.count / amount;
+            comp+=chd.p;
+            chd.cp=comp;
+        }
 	}
+
+    private double charAmount(List probs){
+        ListIterator it = probs.listIterator(0);
+        double amount = 0;
+        while (it.hasNext()){
+            amount+=it.next().count;
+        }
+        return amount;
+    }
 
     // Returns a random character from the given probabilities list.
 	char getRandomChar(List probs) {
-		// Your code goes here
-		return ' ';
+        if(probs.getSize()==0){
+            throw new IllegalArgumentException("List is empty");
+        }
+		double rnd = Math.random();
+        CharData chd=null;
+        ListIterator it = probs.listIterator(0);
+        while (it.hasNext()){
+            chd = it.next();
+            if (chd.cp>=rnd){
+                return chd.chr;
+            }
+        }
+        return chd.chr;
 	}
 
     /**
@@ -71,6 +122,17 @@ public class LanguageModel {
 	}
 
     public static void main(String[] args) {
-		// Your code goes here
+		List L = new List();
+        L.addFirst('a');
+        L.addFirst('b');
+        L.addFirst('c');
+        L.update('a');
+        LanguageModel Lan = new LanguageModel(3);
+        Lan.calculateProbabilities(L);
+        
+        Lan.train("originofspecies.txt");
+        for(String key : Lan.CharDataMap.keySet()){
+            System.out.println("window: " +key+ " value :"+ Lan.CharDataMap.get(key));
+        }
     }
 }
